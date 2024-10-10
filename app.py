@@ -28,7 +28,10 @@ def extract_phone_numbers(soup):
 def scrape_contact_info(url):
     try:
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'es-ES,es;q=0.5',
+            'Connection': 'keep-alive'
         }
         response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()  # Raise an error for bad responses (4xx, 5xx)
