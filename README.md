@@ -26,7 +26,7 @@ These libraries will be installed automatically inside a virtual environment via
 
 1. **Clone the repository**:
     ```bash
-    git clone [https://github.com/yourusername/yourproject.git](https://github.com/filo-g/href-scraper)
+    git clone https://github.com/filo-g/href-scraper
     cd href-scraper
     ```
 
