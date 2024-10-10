@@ -4,41 +4,41 @@ import re
 from googlesearch import search
 import os
 
-# Function to validate and extract emails using regex
-def extract_valid_emails(text):
-    email_pattern = re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b')
-    emails = set(re.findall(email_pattern, text))
+# Function to validate and extract emails from mailto links
+def extract_emails(soup):
+    emails = set()
+    # Find all <a> tags with href starting with mailto:
+    for a in soup.find_all('a', href=re.compile(r'^mailto:')):
+        email = a['href'].replace('mailto:', '').strip()
+        if email:
+            emails.add(email)
     return emails
 
-# Function to validate and clean phone numbers (more relaxed cleaning)
-def extract_valid_phone_numbers(text):
+# Function to validate and extract phone numbers from tel links
+def extract_phone_numbers(soup):
     phone_numbers = set()
-    # Updated regex to capture phone number patterns (with more flexibility)
-    phone_pattern = re.compile(r'(\+?\d{1,4}[\s\-]?)?(?:\(?\d{1,3}?\)?[\s\-]?)?\d{1,4}[\s\-]?\d{1,4}[\s\-]?\d{1,9}')
-    
-    for match in re.findall(phone_pattern, text):
-        cleaned_number = re.sub(r'[^\d\+\-\(\)\s]', '', match)
-        digits_count = re.sub(r'[^\d]', '', cleaned_number)  # Remove non-digits for digit count
-        if len(digits_count) >= 10:
-            phone_numbers.add(cleaned_number.strip())
-    
+    # Find all <a> tags with href starting with tel:
+    for a in soup.find_all('a', href=re.compile(r'^tel:')):
+        phone_number = a['href'].replace('tel:', '').strip()
+        if phone_number:
+            phone_numbers.add(phone_number)
     return phone_numbers
 
 # Main function to scrape contact info from a URL
 def scrape_contact_info(url):
     try:
         response = requests.get(url, timeout=10)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        
-        # Extract all text content from the page
-        page_text = soup.get_text(separator=' ')
-        
+        response.raise_for_status()  # Raise an error for bad responses (4xx, 5xx)
+
+        # Ensure the response content is in HTML
+        soup = BeautifulSoup(response.content, 'html.parser')  # Use response.content to ensure binary data is handled correctly
+
         # Find all valid emails and phone numbers in the page text
-        emails = extract_valid_emails(page_text)
-        phone_numbers = extract_valid_phone_numbers(page_text)
-        
+        emails = extract_emails(soup)
+        phone_numbers = extract_phone_numbers(soup)
+
         return emails, phone_numbers
-    except Exception as e:
+    except requests.RequestException as e:
         print(f"Error scraping {url}: {e}")
         return set(), set()
 
