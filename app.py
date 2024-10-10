@@ -27,7 +27,10 @@ def extract_phone_numbers(soup):
 # Main function to scrape contact info from a URL
 def scrape_contact_info(url):
     try:
-        response = requests.get(url, timeout=10)
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+        }
+        response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()  # Raise an error for bad responses (4xx, 5xx)
 
         # Ensure the response content is in HTML
