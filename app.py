@@ -96,16 +96,22 @@ def main():
     for url in search_results:
         print(f"Scraping {url}")
         emails, phone_numbers = scrape_contact_info(url)
-        results.append({
-            'name': url.split('//')[-1].split('/')[0],  # Extract domain name
-            'url': url,
-            'emails': emails,
-            'phones': phone_numbers
-        })
+        
+        # Only add entries that have at least one email or phone number
+        if emails or phone_numbers:
+            results.append({
+                'name': url.split('//')[-1].split('/')[0],  # Extract domain name
+                'url': url,
+                'emails': emails,
+                'phones': phone_numbers
+            })
     
     # Save the results to a file using the sanitized filename
     save_to_file(results, filename)
-    print(f"Results saved to {filename}")
+
+    # Additional message if no entries were valid
+    if not results:
+        print("No valid entries were found. The output file was not created.")
 
 if __name__ == "__main__":
     main()
