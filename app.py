@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import re
 from googlesearch import search
+import os
 
 # Function to validate and extract emails using regex
 def extract_valid_emails(text):
@@ -41,6 +42,11 @@ def scrape_contact_info(url):
         print(f"Error scraping {url}: {e}")
         return set(), set()
 
+# Function to create the output directory if it doesn't exist
+def create_output_directory(directory='output'):
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
 # Function to sanitize query for use in a filename
 def sanitize_filename(query):
     # Replace spaces with underscores and remove special characters except alphanumeric and underscores
@@ -49,8 +55,22 @@ def sanitize_filename(query):
     return sanitized
 
 # Function to save the results to a text file (in overwrite mode)
+# Function to save the results to a text file (in overwrite mode)
 def save_to_file(results, filename):
-    with open(filename, 'w') as f:  # Ensure overwrite with 'w' mode
+    output_directory = 'output'
+    create_output_directory(output_directory)  # Ensure the output directory exists
+    
+    # Create the full file path
+    filepath = os.path.join(output_directory, filename)
+    
+    # Check for existing files and add a suffix if necessary
+    base_filename, file_extension = os.path.splitext(filepath)
+    counter = 1
+    while os.path.exists(filepath):
+        filepath = f"{base_filename}_{counter}{file_extension}"
+        counter += 1
+    
+    with open(filepath, 'w') as f:  # Ensure overwrite with 'w' mode
         for entry in results:
             f.write(f"Website Name: {entry['name']}\n")
             f.write(f"URL: {entry['url']}\n")
