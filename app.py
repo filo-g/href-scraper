@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import re
 from googlesearch import search
 import os
+import sys
 
 # Function to validate and extract emails from mailto links
 def extract_emails(soup):
@@ -86,8 +87,13 @@ def save_to_file(results, filename):
 
 # Main script
 def main():
-    # Ask the user for a search query
-    query = input("Enter your search query: ").strip()
+    # Check if the search query is provided as a command-line argument
+    if len(sys.argv) < 2:
+        print("Usage: python app.py \"search query\"")
+        sys.exit(1)  # Exit the program with an error code
+
+    # Get the search query from the command-line argument
+    query = sys.argv[1].strip()
     
     # Sanitize query to use it as part of the filename
     sanitized_query = sanitize_filename(query)
