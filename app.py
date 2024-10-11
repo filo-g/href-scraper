@@ -76,14 +76,35 @@ def save_to_file(results, filename):
     while os.path.exists(filepath):
         filepath = f"{base_filename}_{counter}{file_extension}"
         counter += 1
-    
-    with open(filepath, 'w') as f:  # Ensure overwrite with 'w' mode
-        for entry in results:
-            f.write(f"Website Name: {entry['name']}\n")
-            f.write(f"URL: {entry['url']}\n")
-            f.write(f"Emails: {', '.join(entry['emails']) if entry['emails'] else 'None'}\n")
-            f.write(f"Phone Numbers: {', '.join(entry['phones']) if entry['phones'] else 'None'}\n")
-            f.write("\n" + "-"*50 + "\n\n")
+
+    # Only write to file if there are valid entries
+    if results:  # Check if results is not empty
+        with open(filepath, 'w') as f:  # Ensure overwrite with 'w' mode
+            # Create sets to keep track of unique emails and phone numbers across all results
+            all_emails = set()
+            all_phones = set()
+
+            for entry in results:
+                # Only save unique emails and phone numbers
+                unique_emails = set(entry['emails']) - all_emails
+                unique_phones = set(entry['phones']) - all_phones
+                
+                # If there are no new unique emails or phones, skip this entry
+                if not unique_emails and not unique_phones:
+                    continue
+
+                # Update the global sets with the new unique entries
+                all_emails.update(unique_emails)
+                all_phones.update(unique_phones)
+
+                f.write(f"Website Name: {entry['name']}\n")
+                f.write(f"URL: {entry['url']}\n")
+                f.write(f"Emails: {', '.join(unique_emails) if unique_emails else 'None'}\n")
+                f.write(f"Phone Numbers: {', '.join(unique_phones) if unique_phones else 'None'}\n")
+                f.write("\n" + "-"*50 + "\n\n")
+
+    else:
+        print(f"No valid entries found. The file '{filename}' will not be created.")
 
 # Main script
 def main():
