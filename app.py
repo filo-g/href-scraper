@@ -6,7 +6,7 @@ import os
 import sys
 
 # Function to validate and extract emails from mailto links
-def extract_emails(soup):
+def extract_emails_from_href(soup):
     emails = set()
     # Find all <a> tags with href starting with mailto:
     for a in soup.find_all('a', href=re.compile(r'^mailto:')):
@@ -15,8 +15,14 @@ def extract_emails(soup):
             emails.add(email)
     return emails
 
+# Function to scrape emails from the entire page content
+def extract_emails_from_page(content):
+    # Regex pattern to match typical email addresses
+    email_pattern = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+    return set(re.findall(email_pattern, content))  # Return as a set to ensure unique results
+
 # Function to validate and extract phone numbers from tel links
-def extract_phone_numbers(soup):
+def extract_phone_numbers_from_href(soup):
     phone_numbers = set()
     # Find all <a> tags with href starting with tel:
     for a in soup.find_all('a', href=re.compile(r'^tel:')):
@@ -25,26 +31,43 @@ def extract_phone_numbers(soup):
             phone_numbers.add(phone_number)
     return phone_numbers
 
+# Function to scrape phone numbers from the entire page content
+def extract_phone_numbers_from_page(content):
+    # Regex pattern to match phone numbers (e.g., international and local formats)
+    phone_pattern = r'\+?\d[\d\s\-()]{7,15}'  # Match phone numbers with country codes and formatting
+    return set(re.findall(phone_pattern, content))  # Return as a set to ensure unique results
+
 # Main function to scrape contact info from a URL
 def scrape_contact_info(url):
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'es-ES,es;q=0.5',
+        'Connection': 'keep-alive'
+    }
+    
     try:
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Language': 'es-ES,es;q=0.5',
-            'Connection': 'keep-alive'
-        }
         response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()  # Raise an error for bad responses (4xx, 5xx)
 
         # Ensure the response content is in HTML
         soup = BeautifulSoup(response.content, 'html.parser')  # Use response.content to ensure binary data is handled correctly
+        page_content = response.text  # The full HTML content as a string
 
         # Find all valid emails and phone numbers in the page text
-        emails = extract_emails(soup)
-        phone_numbers = extract_phone_numbers(soup)
+        emails = extract_emails_from_href(soup)
+        phone_numbers = extract_phone_numbers_from_href(soup)
+
+        # If no emails found, scrape the entire page for emails
+        if not emails:
+            emails = extract_emails_from_page(page_content)
+
+        # If no phone numbers found, scrape the entire page for phone numbers
+        if not phone_numbers:
+            phone_numbers = extract_phone_numbers_from_page(page_content)
 
         return emails, phone_numbers
+
     except requests.RequestException as e:
         print(f"Error scraping {url}: {e}")
         return set(), set()
