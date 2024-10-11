@@ -16,10 +16,10 @@ def extract_emails_from_href(soup):
     return emails
 
 # Function to scrape emails from the entire page content
-def extract_emails_from_page(content):
+def extract_emails_from_page(soup):
     # Regex pattern to match typical email addresses
     email_pattern = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
-    return set(re.findall(email_pattern, content))  # Return as a set to ensure unique results
+    return set(re.findall(email_pattern, soup))  # Return as a set to ensure unique results
 
 # Function to validate and extract phone numbers from tel links
 def extract_phone_numbers_from_href(soup):
@@ -32,10 +32,36 @@ def extract_phone_numbers_from_href(soup):
     return phone_numbers
 
 # Function to scrape phone numbers from the entire page content
-def extract_phone_numbers_from_page(content):
+def extract_phone_numbers_from_page(soup):
+    # Define a set of keywords to look for in class, id, or attributes
+    keywords = ['phone', 'number', 'telefono', 'numero']
+    
+    # Find elements with class, id, or attributes containing any of the keywords
+    phone_elements = soup.find_all(lambda tag: any(
+        keyword in (tag.get('class') or []) + [tag.get('id')] + list(tag.attrs.keys()) 
+        for keyword in keywords
+    ))
+
+    # Additionally, search inside header and footer elements
+    header_elements = soup.find_all('header')
+    footer_elements = soup.find_all('footer')
+
+    # Combine all the elements (phone, header, and footer)
+    relevant_elements = phone_elements + header_elements + footer_elements
+
+    # Initialize an empty set to store found phone numbers
+    phone_numbers = set()
+    
     # Regex pattern to match phone numbers (e.g., international and local formats)
-    phone_pattern = r'\+?\d[\d\s\-()]{7,15}'  # Match phone numbers with country codes and formatting
-    return set(re.findall(phone_pattern, content))  # Return as a set to ensure unique results
+    phone_pattern = r'\+?\d[\d\s\-()]{7,15}'
+    
+    # Extract phone numbers from the text of each selected element
+    for element in relevant_elements:
+        text_content = element.get_text(strip=True)
+        numbers_found = re.findall(phone_pattern, text_content)
+        phone_numbers.update(numbers_found)
+    
+    return phone_numbers
 
 # Main function to scrape contact info from a URL
 def scrape_contact_info(url):
@@ -64,7 +90,7 @@ def scrape_contact_info(url):
 
         # If no phone numbers found, scrape the entire page for phone numbers
         if not phone_numbers:
-            phone_numbers = extract_phone_numbers_from_page(page_content)
+            phone_numbers = extract_phone_numbers_from_page(soup)
 
         return emails, phone_numbers
 
