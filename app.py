@@ -36,9 +36,9 @@ def extract_phone_numbers_from_page(soup):
     # Define a set of keywords to look for in class, id, or attributes
     keywords = ['phone', 'number', 'telefono', 'numero']
     
-    # Find elements with class, id, or attributes containing any of the keywords
+    # Find elements where class, id, or attributes contain any of the keywords as substrings
     phone_elements = soup.find_all(lambda tag: any(
-        keyword in (tag.get('class') or []) + [tag.get('id')] + list(tag.attrs.keys()) 
+        any(keyword in (attr or '') for attr in (tag.get('class') or []) + [(tag.get('id') or '')] + list(tag.attrs.keys()))
         for keyword in keywords
     ))
 
